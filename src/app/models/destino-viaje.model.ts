@@ -1,8 +1,26 @@
+import {v4 as uuid} from 'uuid';
+
 export class DestinoViaje{
-    nombre:string;
-    imageUrl:string;
-    constructor(nombre:string,imageUrl:string){
-        this.nombre=nombre;
-        this.imageUrl=imageUrl;
+    selected: boolean;
+    servicios: string[];
+    id=uuid();
+    constructor(public nombre:string,public imageUrl:string, public votes:number=0){
+        this.servicios=['Desayuno','Piscina'];
     }
+
+    isSelected():boolean{
+        return this.selected;
+    }
+
+    setSelected(value:boolean):void{
+        this.selected=value;
+    }
+
+    voteUp(){
+        this.votes++;
+    }
+    voteDown(){
+        this.votes--;
+    }
+    
 }
