@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { DestinoViaje } from './models/destino-viaje.model';
-import { Observable } from 'rxjs';
+import { Observable, Observer } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -10,9 +10,9 @@ import { Observable } from 'rxjs';
 export class AppComponent {
   title = 'angular-wishlist';
 
-  time=new Observable(obeserver=>{
-    setInterval(()=>obeserver.next(new Date().toString()),1000);
-  })
+  time = new Observable<string>((observer: Observer<string>) => {
+    setInterval(() => observer.next(new Date().toString()), 1000);
+  });
 
   constructor(){
 
