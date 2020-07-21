@@ -39,6 +39,7 @@ const routes:Routes=[
   {path:'',redirectTo:'home', pathMatch:"full"},
   {path:'destino',component:DestinoDetalleComponent},
   {path:'login', component:LoginComponent},
+  {path:'destinodetalle/:id', component:DestinoDetalleComponent},
   {
     path:'protected',
     component:ProtectedComponent,
@@ -95,7 +96,7 @@ let reducersInitialState={
     ReservasModule
 
   ],
-  providers: [DestinoApiClient,AuthService,UsuarioLogeadoGuard],
+  providers: [AuthService,UsuarioLogeadoGuard],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

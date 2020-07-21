@@ -7,6 +7,7 @@
     </div>
     <div class="card-desc">
         <h3>{{destino.nombre}}</h3>
+        <p>id:{{destino.id}}</p>
         <p> Servicios:</p>
         <ul>
             <li *ngFor="let s of destino.servicios">
@@ -29,6 +30,6 @@
         <span *ngIf="destino.isSelected()">
             <span ngNonBindable>-- PREFERIDO --</span>
         </span>
-        <a [routerLink]="['/destino']">Ver detalle </a>  
+        <a [routerLink]="['/destinodetalle', destino.id]">Ver detalle </a>  
     </div>
 </div>
