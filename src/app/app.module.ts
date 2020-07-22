@@ -10,7 +10,7 @@ import { DestinoDetalleComponent } from './components/destino-detalle/destino-de
 
 import {StoreModule as NgRxStoreModule,ActionReducerMap, Store} from '@ngrx/store'
 import {EffectsModule} from '@ngrx/effects';
-
+import Dexie from 'dexie';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FormDestinoViajeComponent } from './components/form-destino-viaje/form-destino-viaje.component'
 import { HttpClientModule, HttpClient, HttpHeaders, HttpRequest } from '@angular/common/http';
@@ -24,6 +24,7 @@ import { VuelosMainComponent } from './components/vuelos/vuelos-main/vuelos-main
 import { VuelosMasInfoComponent } from './components/vuelos/vuelos-mas-info/vuelos-mas-info.component';
 import { VuelosDetalleComponent } from './components/vuelos/vuelos-detalle/vuelos-detalle.component';
 import { ReservasModule } from './reservas/reservas.module';
+import { DestinoViaje } from './models/destino-viaje.model';
 
 export interface AppConfig{
   apiEndPoint:string
@@ -95,6 +96,23 @@ export class AppLoadService{
     this.store.dispatch(new InitMyDataAction(response.body))
   }
 }
+
+
+@Injectable({
+  providedIn:'root'
+})
+export class MyDataBase  extends Dexie{
+  destinos:Dexie.Table<DestinoViaje, number>
+  constructor(){
+    super('MyDataBase');
+    this.version(1).stores({
+      destinos:'++id, nombre,imgaeUrl'
+    })
+  }
+}
+
+
+export const db = new MyDataBase();
 @NgModule({
   declarations: [
     AppComponent,

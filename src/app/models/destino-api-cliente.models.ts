@@ -2,7 +2,7 @@ import { DestinoViaje } from './destino-viaje.model';
 import { Subject, BehaviorSubject } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpRequest, HttpResponse } from '@angular/common/http';
 import { Store } from '@ngrx/store';
-import { AppLoadService, APP_CONFIG, AppConfig } from '../app.module';
+import { AppLoadService, APP_CONFIG, AppConfig, db } from '../app.module';
 import { Inject, forwardRef, Injectable } from '@angular/core';
 import { NuevoDestinoAction } from './destino-viaje-state.models';
 
@@ -21,6 +21,10 @@ export class DestinoApiClient{
        this.httpClient.request(req).subscribe((data:HttpResponse<{}>)=>{
            if(data.status==200){
             this.store.dispatch(new NuevoDestinoAction(d));
+            const myDb=db;
+            myDb.destinos.add(d);
+            console.log('Todos los destinos de la db');
+            myDb.destinos.toArray().then(destinos=> console.log(destinos));
            }
        })
     }
