@@ -5,6 +5,7 @@ import { Actions, Effect, ofType } from '@ngrx/effects';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
+
 export interface DestinoViajeState {
     items: DestinoViaje[];
     loading: boolean;
@@ -24,7 +25,8 @@ export enum DestinoViajeActionTypes {
     NUEVO_DESTINO = '[Destinos viajes] Nuevo',
     ELEGIDO_FAVORITO = '[Destinos viajes] Favorito',
     VOTE_UP = '[Destinos viajes] Vote up',
-    VOTE_DOWN = '[Destinos viajes] Vote Down'
+    VOTE_DOWN = '[Destinos viajes] Vote Down',
+    INIT_MY_DATA ='[Destinos viajes] Init my Data'
 }
 
 export class NuevoDestinoAction implements Action {
@@ -42,13 +44,18 @@ export class VoteUpAction implements Action {
     type = DestinoViajeActionTypes.VOTE_UP;
     constructor(public destino: DestinoViaje) {}
 }
-
+ 
 export class VoteDownAction implements Action {
     type = DestinoViajeActionTypes.VOTE_DOWN;
     constructor(public destino: DestinoViaje) {}
 }
 
-export type DestinoViajeActions = NuevoDestinoAction | ElegidoFavoritoAction | VoteUpAction | VoteDownAction;
+export class InitMyDataAction implements Action{
+    type=DestinoViajeActionTypes.INIT_MY_DATA;
+    constructor(public destinos:String[]){}
+}
+
+export type DestinoViajeActions = NuevoDestinoAction | ElegidoFavoritoAction | VoteUpAction | VoteDownAction| InitMyDataAction;
 
 export function reduceDestinoViaje(
     state: DestinoViajeState,
@@ -88,6 +95,13 @@ export function reduceDestinoViaje(
                 ...state
             };
         }
+        case DestinoViajeActionTypes.INIT_MY_DATA:{
+            const destinos=(action as InitMyDataAction).destinos;
+            return {
+                ...state,
+                items:destinos.map((d)=>new DestinoViaje(d,''))
+            }
+        }
     }
    
     return state;
@@ -102,4 +116,12 @@ export class DestinoViajeEffects {
     );
 
     constructor(private action$: Actions) { }
+}
+
+export function initializeDestinosViajeState(){
+    return {
+        itmes:[],
+        loadin:false,
+        favorito:null,
+    }
 }

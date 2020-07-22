@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, InjectionToken, Injectable, APP_INITIALIZER } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { DestinoViajeComponent } from './components/destino-viaje/destino-viaje.component';
@@ -8,13 +8,13 @@ import { ListaDestinoComponent } from './components/lista-destino/lista-destino.
 import {RouterModule, Routes} from "@angular/router";
 import { DestinoDetalleComponent } from './components/destino-detalle/destino-detalle.component';
 
-import {StoreModule as NgRxStoreModule,ActionReducerMap} from '@ngrx/store'
+import {StoreModule as NgRxStoreModule,ActionReducerMap, Store} from '@ngrx/store'
 import {EffectsModule} from '@ngrx/effects';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FormDestinoViajeComponent } from './components/form-destino-viaje/form-destino-viaje.component'
-import { DestinoApiClient } from './models/destino-api-cliente.models';
-import { DestinoViajeState, reduceDestinoViaje, initializeDestinosViajeStates, DestinoViajeEffects } from './models/destino-viaje-state.models';
+import { HttpClientModule, HttpClient, HttpHeaders, HttpRequest } from '@angular/common/http';
+import { DestinoViajeState, reduceDestinoViaje, initializeDestinosViajeStates, DestinoViajeEffects, InitMyDataAction } from './models/destino-viaje-state.models';
 import { LoginComponent } from './components/login/login.component';
 import { ProtectedComponent } from './components/protected/protected.component';
 import { UsuarioLogeadoGuard } from './guards/usuario-logeado/usuario-logeado.guard';
@@ -25,7 +25,14 @@ import { VuelosMasInfoComponent } from './components/vuelos/vuelos-mas-info/vuel
 import { VuelosDetalleComponent } from './components/vuelos/vuelos-detalle/vuelos-detalle.component';
 import { ReservasModule } from './reservas/reservas.module';
 
+export interface AppConfig{
+  apiEndPoint:string
+}
 
+const APP_CONFIG_VALUE:AppConfig={
+  apiEndPoint:'http://localhost:3000'
+}
+export const APP_CONFIG=new InjectionToken<AppConfig>('app.config');
 
 export const childrenRouterVuelos:Routes=[
   {path:'',redirectTo:'main',pathMatch:'full'},
@@ -70,6 +77,24 @@ let reducersInitialState={
 
 //redux fin init
 
+
+export function init_app(appLoadService:AppLoadService):()=>Promise<any>{
+  return ()=> appLoadService.initializeDestinosViajeStates();
+  
+}
+
+@Injectable()
+export class AppLoadService{
+  constructor(private store:Store<AppState>,private http:HttpClient){
+
+  }
+  async initializeDestinosViajeStates():Promise<any>{
+    const headers:HttpHeaders= new HttpHeaders({'X-API-TOKEN':'token-seguridad'});
+    const req= new HttpRequest('GET',APP_CONFIG_VALUE.apiEndPoint+'/my',{headers:headers});
+    const response:any=await this.http.request(req).toPromise();
+    this.store.dispatch(new InitMyDataAction(response.body))
+  }
+}
 @NgModule({
   declarations: [
     AppComponent,
@@ -93,10 +118,13 @@ let reducersInitialState={
     ReactiveFormsModule,
     NgRxStoreModule.forRoot(reduces,{initialState:reducersInitialState}),
     EffectsModule.forRoot([DestinoViajeEffects]),
-    ReservasModule
+    ReservasModule,
+    HttpClientModule
 
   ],
-  providers: [AuthService,UsuarioLogeadoGuard],
+  providers: [AuthService,UsuarioLogeadoGuard,
+  {provide:APP_CONFIG, useValue:APP_CONFIG_VALUE},
+  AppLoadService,{provide:APP_INITIALIZER,useFactory:init_app, deps:[AppLoadService],multi:true}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

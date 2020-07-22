@@ -1,15 +1,28 @@
 import { DestinoViaje } from './destino-viaje.model';
 import { Subject, BehaviorSubject } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpRequest, HttpResponse } from '@angular/common/http';
+import { Store } from '@ngrx/store';
+import { AppLoadService, APP_CONFIG, AppConfig } from '../app.module';
+import { Inject, forwardRef, Injectable } from '@angular/core';
+import { NuevoDestinoAction } from './destino-viaje-state.models';
 
+@Injectable({ providedIn: 'root' })
 export class DestinoApiClient{
     destinos:DestinoViaje[];
     current:Subject<DestinoViaje>=new BehaviorSubject<DestinoViaje>(null);
-    constructor(){
+    constructor(private store:Store<AppLoadService>,
+        @Inject(forwardRef(()=>APP_CONFIG)) private config:AppConfig,private httpClient:HttpClient){
         this.destinos=[];
     }
 
     add(d:DestinoViaje){
-        this.destinos.push(d);
+       const headers=new HttpHeaders({'X-APi-TOKEN':'token-seguridad'});
+       const req=new HttpRequest('POST',this.config.apiEndPoint+'/my',{nevo:d.nombre},{headers:headers});
+       this.httpClient.request(req).subscribe((data:HttpResponse<{}>)=>{
+           if(data.status==200){
+            this.store.dispatch(new NuevoDestinoAction(d));
+           }
+       })
     }
 
     getAll():DestinoViaje[]{
