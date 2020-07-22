@@ -10,6 +10,7 @@ var ciudades=['Paris', 'Barcelona','Barranquilla','Montevideo',
 'Santiago de Chile','Mexico DF','Nueva York'];
 
 app.get('/ciudades',(req,res,next)=>res.json(ciudades.filter((c)=>c.toLowerCase().indexOf(req.query.q.toString())>-1)));
+app.get('/api/translation',(req, res,next)=>res.json({lang:req.query.lang, key:'Hola '+req.query.lang}));
 
 var misDestinos=[];
 app.get('/my', (req,res,next)=>res.json(misDestinos));
