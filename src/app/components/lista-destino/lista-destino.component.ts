@@ -14,21 +14,23 @@ import { ElegidoFavoritoAction, NuevoDestinoAction } from '../../models/destino-
 export class ListaDestinoComponent implements OnInit {
   @Output() onItemAdded:EventEmitter<DestinoViaje>;
 
- 
+  destinos;
   updates:string[];
 
-  constructor(public destinoApiClient:DestinoApiClient, private store:Store<AppState>) { 
+  constructor(private destinoApiClient:DestinoApiClient, private store:Store<AppState>) { 
     this.onItemAdded =new EventEmitter();
-    this.updates=[];
-    this.store.select(state=>state.destinos.favorito).subscribe(data=>{
-          const fav=data;
-          if(data!=null){
-            this.updates.push("Se ha elegido a "+fav.nombre);
-          }
+    this.updates = [];
+    this.store.select(state => state.destinos.favorito)
+      .subscribe(data => {
+        if (data != null) {
+          this.updates.push('Se a elegido a ' + data.nombre);
+        }
       });
+    store.select(state => state.destinos.items).subscribe(items => this.destinos = items);
   }
 
   ngOnInit(): void {
+    
   }
 
   agregado(d:DestinoViaje){

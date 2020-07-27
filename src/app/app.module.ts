@@ -14,7 +14,7 @@ import Dexie from 'dexie';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FormDestinoViajeComponent } from './components/form-destino-viaje/form-destino-viaje.component'
 import { HttpClientModule, HttpClient, HttpHeaders, HttpRequest } from '@angular/common/http';
-import { DestinoViajeState, reduceDestinoViaje, initializeDestinosViajeStates, DestinoViajeEffects, InitMyDataAction } from './models/destino-viaje-state.models';
+import { DestinosViajesEffects, InitMyDataAction, DestinosViajesState, reducerDestinosViajes, initializeDestinosViajesState } from './models/destino-viaje-state.models';
 import { LoginComponent } from './components/login/login.component';
 import { ProtectedComponent } from './components/protected/protected.component';
 import { UsuarioLogeadoGuard } from './guards/usuario-logeado/usuario-logeado.guard';
@@ -27,7 +27,12 @@ import { ReservasModule } from './reservas/reservas.module';
 import { DestinoViaje } from './models/destino-viaje.model';
 import {TranslateModule} from '@ngx-translate/core';
 import { Observable, from } from 'rxjs';
-import { flatMap } from 'rxjs/operators';
+import {map, flatMap } from 'rxjs/operators';
+import { NgxMapboxGLModule } from "ngx-mapbox-gl";
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { EspiameDirective } from './espiame.directive';
+import { TrackearClickDirective } from './trackear-click.directive';
+
 
 export interface AppConfig{
   apiEndPoint:string
@@ -65,41 +70,38 @@ const routes:Routes=[
  
 ];
 
-//redux init
-export interface AppState{
-  destinos:DestinoViajeState
+// redux init
+export interface AppState {
+  destinos: DestinosViajesState;
 }
 
-const reduces:ActionReducerMap<AppState>={
-  destinos:reduceDestinoViaje
+const reducers: ActionReducerMap<AppState> = {
+  destinos: reducerDestinosViajes
 };
 
-let reducersInitialState={
-  destinos:initializeDestinosViajeStates()
+const reducersInitialState = {
+  destinos: initializeDestinosViajesState()
 }
+// redux fin init
 
 
-//redux fin init
-
-
-export function init_app(appLoadService:AppLoadService):()=>Promise<any>{
-  return ()=> appLoadService.initializeDestinosViajeStates();
-  
+// app init
+export function init_app(appLoadService: AppLoadService): () => Promise<any>  {
+  return () => appLoadService.intializeDestinosViajesState();
 }
 
 @Injectable()
-export class AppLoadService{
-  constructor(private store:Store<AppState>,private http:HttpClient){
-
-  }
-  async initializeDestinosViajeStates():Promise<any>{
-    const headers:HttpHeaders= new HttpHeaders({'X-API-TOKEN':'token-seguridad'});
-    const req= new HttpRequest('GET',APP_CONFIG_VALUE.apiEndPoint+'/my',{headers:headers});
-    const response:any=await this.http.request(req).toPromise();
-    this.store.dispatch(new InitMyDataAction(response.body))
+export class AppLoadService {
+  constructor(private store: Store<AppState>, private http: HttpClient) { }
+  async intializeDestinosViajesState(): Promise<any> {
+    const headers: HttpHeaders = new HttpHeaders({'X-API-TOKEN': 'token-seguridad'});
+    const req = new HttpRequest('GET', APP_CONFIG_VALUE.apiEndPoint + '/my', { headers: headers });
+    const response: any = await this.http.request(req).toPromise();
+    this.store.dispatch(new InitMyDataAction(response.body));
   }
 }
 
+// fin app init
 export class Translation{
   constructor(public id:number,public lang:string, public key:string,public value:string){
 
@@ -116,47 +118,48 @@ export class MyDataBase  extends Dexie{
   constructor(){
     super('MyDataBase');
     this.version(1).stores({
-      destinos:'++id, nombre,imgaeUrl'
-    })
-    this.version(2).stores({
-      destinos:'++id, nombre,imgaeUrl',
+      destinos:'++id, nombre,imageUrl, selected',
       translations:'++id,lang,key,value'
     })
   }
 }
 //
 
-class TranslationLoader implements TranslateLoader{
-  constructor(private http:HttpClient){
+// i18n ini
+class TranslationLoader implements TranslateLoader {
+  constructor(private http: HttpClient) { }
 
-  }
-  getTranslation(lang:string):Observable<any>{
-    const promise=db.translations.where('lang')
-    .equals(lang)
-    .toArray()
-    .then(results=>{
-      if(results.length==0){
-        return this.http.get<Translation[]>(APP_CONFIG_VALUE.apiEndPoint+'/api/translation?lang='+lang)
-        .toPromise().then(apiResulst=>{
-          db.translations.bulkAdd(apiResulst);
-          return apiResulst;
-        });
-      }
-      return results;
-    }).then(traducciones=>{
-      console.log('traducciones cargadas');
-      console.log(traducciones);
-      return traducciones
-    }).then(traducciones=>{
-      return traducciones.map((t)=>({[t.key]:t.value}))
-    });
-    return from(promise).pipe(flatMap((elements)=>from(elements)))
+  getTranslation(lang: string): Observable<any> {
+    const promise = db.translations
+                      .where('lang')
+                      .equals(lang)
+                      .toArray()
+                      .then(results => {
+                                        if (results.length === 0) {
+                                          return this.http
+                                            .get<Translation[]>(APP_CONFIG_VALUE.apiEndPoint + '/api/translation?lang=' + lang)
+                                            .toPromise()
+                                            .then(apiResults => {
+                                              db.translations.bulkAdd(apiResults);
+                                              return apiResults;
+                                            });
+                                        }
+                                        return results;
+                                      }).then((traducciones) => {
+                                        console.log('traducciones cargadas:');
+                                        console.log(traducciones);
+                                        return traducciones;
+                                      }).then((traducciones) => {
+                                        return traducciones.map((t) => ({ [t.key]: t.value}));
+                                      });
+   return from(promise).pipe(flatMap((elems) => from(elems)));
   }
 }
 
-function httpLoadFactory(http:HttpClient) {
-    return new TranslationLoader(http);
+function HttpLoaderFactory(http: HttpClient) {
+  return new TranslationLoader(http);
 }
+// i18n fin
 
 
 export const db = new MyDataBase();
@@ -173,6 +176,8 @@ export const db = new MyDataBase();
     VuelosMainComponent,
     VuelosMasInfoComponent,
     VuelosDetalleComponent,
+    EspiameDirective,
+    TrackearClickDirective,
 
     
   ],
@@ -181,14 +186,19 @@ export const db = new MyDataBase();
     RouterModule.forRoot(routes),
     FormsModule,
     ReactiveFormsModule,
-    NgRxStoreModule.forRoot(reduces,{initialState:reducersInitialState}),
-    EffectsModule.forRoot([DestinoViajeEffects]),
+    NgRxStoreModule.forRoot(reducers,{initialState:reducersInitialState, runtimeChecks:{
+      strictStateImmutability: false,
+      strictActionImmutability: false
+    }}),
+    EffectsModule.forRoot([DestinosViajesEffects]),
     ReservasModule,
     HttpClientModule,
+    NgxMapboxGLModule,
+    BrowserAnimationsModule,
     TranslateModule.forRoot({
       loader:{
         provide:TranslateLoader,
-        useFactory:(httpLoadFactory),
+        useFactory:(HttpLoaderFactory),
         deps:[HttpClient]
       }
     })

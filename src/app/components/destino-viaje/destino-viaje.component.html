@@ -1,4 +1,4 @@
-<div class="card-content">
+<div class="card-content" [@esFavorito]="destino.isSelected() ?'estadoFavorito':'estadoNoFavorito'">
     <div class="card-img">
         <img src="https://placeimg.com/380/230/nature" alt="">
         <span>
@@ -18,18 +18,18 @@
             </li>
         </ul>
         <div>
-            <a href="#" (click)="voteUp()">
+            <a href="#" (click)="voteUp()" appTrackearClick data-trackear-tags="destino_viaje_vote_up">
                 <i class="material-icons md-18">thumb_up</i>
             </a>
-            <a href="#" (click)="voteDown()">
+            <a href="#" (click)="voteDown()"  appTrackearClick data-trackear-tags="destino_viaje_vote_down">
                 <i class="material-icons md-18">thumb_down</i>
             </a>
             {{destino.votes}}
         </div>
         <a href="#" class="btn-card" (click)="ir()">Ir!</a>
         <span *ngIf="destino.isSelected()">
-            <span ngNonBindable>-- PREFERIDO --</span>
+            <span ngNonBindable>{{PREFERIDO}}</span>
         </span>
-        <a [routerLink]="['/destinodetalle', destino.id]">Ver detalle </a>  
+        <a [routerLink]="['/destinodetalle', destino.id]"  appTrackearClick data-trackear-tags="destino_viaje_detalle">Ver detalle </a>  
     </div>
 </div>

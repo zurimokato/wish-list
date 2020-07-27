@@ -15,11 +15,10 @@
     </div>
     <hr class="mb-5">
     <div class="row row-flex">
-        <app-destino-viaje *ngFor="let destino of destinoApiClient.getAll();let i= index" 
-        [destino]="destino"
-        [position]="i+1"
-        (clicked)="elegido($event)"
-        ></app-destino-viaje>
+        <div *ngIf="destinos">
+            <app-destino-viaje *ngFor="let destino of destinos;let i= index" [destino]="destino" [position]="i+1" appEspiame
+                (clicked)="elegido($event)"></app-destino-viaje>
+        </div>
     </div>
     <hr class="mb-5">
     <div class="row row-flex">
@@ -28,4 +27,5 @@
             <li *ngFor="let update of updates">{{update}}</li>
         </ul>
     </div>
+
 </div>
